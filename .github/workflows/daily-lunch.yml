@@ -20,6 +20,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r lunch_bot/requirements.txt
+      - name: Debug network reachability
+        run: |
+          echo "Runner outbound IP:"
+          curl -s https://ifconfig.me || true
+          echo
+          echo "Response from target API:"
+          curl -sv "https://fatraceschool.k12ea.gov.tw/offering/meal?period=2026-09-30,2026-09-30&KitchenId=40553" 2>&1 | tail -40
       - name: Determine meal type from trigger
         id: meal
         run: |
