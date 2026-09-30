@@ -1,12 +1,12 @@
 import os
 import re
 import time
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 
 import requests
 
 API_BASE = "https://fatraceschool.k12ea.gov.tw"
+TAIPEI_TZ = timezone(timedelta(hours=8))  # 台灣不實行夏令時間，用固定 UTC+8 即可
 
 # 臺中市西區私立愛迪生幼兒園（校園食材登錄平臺）
 SCHOOL_NAME = "臺中市西區愛迪生幼兒園"
@@ -84,10 +84,10 @@ def main():
     channel_access_token = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
     user_id = os.environ["LINE_USER_ID"]
 
-    # MENU_TYPE 由 GitHub Actions 依觸發的排程帶入：0=早點 1=午餐 2=午點，留空則三個都查
+    # MENU_TYPE 由排程（launchd）依觸發時段帶入：0=早點 1=午餐 2=午點，留空則三個都查
     menu_type_filter = os.environ.get("MENU_TYPE", "").strip()
 
-    today = datetime.now(ZoneInfo("Asia/Taipei")).date()
+    today = datetime.now(TAIPEI_TZ).date()
     display_date = today.strftime("%Y/%m/%d")
     meals = fetch_day_meals(today.strftime("%Y-%m-%d"))
 
