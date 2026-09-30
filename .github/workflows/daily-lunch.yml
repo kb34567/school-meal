@@ -1,0 +1,36 @@
+name: Daily Lunch Menu
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # 10:00 台灣時間 -> 早點
+    - cron: "0 5 * * *" # 13:00 台灣時間 -> 午餐
+    - cron: "30 7 * * *" # 15:30 台灣時間 -> 午點
+  workflow_dispatch:
+    inputs:
+      menu_type:
+        description: "0=早點 1=午餐 2=午點，留空則三個都查"
+        required: false
+
+jobs:
+  send-menu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r lunch_bot/requirements.txt
+      - name: Determine meal type from trigger
+        id: meal
+        run: |
+          case "${{ github.event.schedule }}" in
+            "0 2 * * *") echo "menu_type=0" >> "$GITHUB_OUTPUT" ;;
+            "0 5 * * *") echo "menu_type=1" >> "$GITHUB_OUTPUT" ;;
+            "30 7 * * *") echo "menu_type=2" >> "$GITHUB_OUTPUT" ;;
+            *) echo "menu_type=${{ github.event.inputs.menu_type }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+      - run: python lunch_bot/menu_bot.py
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          MENU_TYPE: ${{ steps.meal.outputs.menu_type }}
